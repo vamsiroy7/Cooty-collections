@@ -1,0 +1,145 @@
+/* Replace the 'YYYYMM_value' with the specific value of yyyymm you want to filter. 
+   You can loop over this for multiple values or analyze specific months. */
+
+/* Step 0: Initial count by yyyymm */
+proc sql;
+    title "Initial Count for each yyyymm";
+    select yyyymm, count(*) as Initial_Record_Count
+    from B1_perf_&perfqtr
+    group by yyyymm;
+quit;
+
+/* Step 1: Filter by CHAMPION_FLAG = 0 */
+proc sql;
+    title "Step 1: Records where CHAMPION_FLAG = 0 by yyyymm";
+    select yyyymm, count(*) as Step_1_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+    group by yyyymm;
+quit;
+
+/* Step 2: Filter by acctno = loan_acct_nbr */
+proc sql;
+    title "Step 2: Records where acctno = loan_acct_nbr by yyyymm";
+    select yyyymm, count(*) as Step_2_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+      and acctno = loan_acct_nbr
+    group by yyyymm;
+quit;
+
+/* Step 3: Exclude certain branch codes */
+proc sql;
+    title "Step 3: Exclude branch codes ('335', '014', '015', '016', '976') by yyyymm";
+    select yyyymm, count(*) as Step_3_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+      and acctno = loan_acct_nbr
+      and branch not in ("335", "014", "015", "016", "976")
+    group by yyyymm;
+quit;
+
+/* Step 4: Filter by bk_code = 0 */
+proc sql;
+    title "Step 4: Records where bk_code = 0 by yyyymm";
+    select yyyymm, count(*) as Step_4_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+      and acctno = loan_acct_nbr
+      and branch not in ("335", "014", "015", "016", "976")
+      and bk_code = 0
+    group by yyyymm;
+quit;
+
+/* Step 5: Filter by repo_step = 0 */
+proc sql;
+    title "Step 5: Records where repo_step = 0 by yyyymm";
+    select yyyymm, count(*) as Step_5_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+      and acctno = loan_acct_nbr
+      and branch not in ("335", "014", "015", "016", "976")
+      and bk_code = 0
+      and repo_step = 0
+    group by yyyymm;
+quit;
+
+/* Step 6: Filter by cycle_past_due_cnt = 0 */
+proc sql;
+    title "Step 6: Records where cycle_past_due_cnt = 0 by yyyymm";
+    select yyyymm, count(*) as Step_6_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+      and acctno = loan_acct_nbr
+      and branch not in ("335", "014", "015", "016", "976")
+      and bk_code = 0
+      and repo_step = 0
+      and cycle_past_due_cnt = 0
+    group by yyyymm;
+quit;
+
+/* Step 7: Filter by day_past_due_cnt <= 7 */
+proc sql;
+    title "Step 7: Records where day_past_due_cnt <= 7 by yyyymm";
+    select yyyymm, count(*) as Step_7_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+      and acctno = loan_acct_nbr
+      and branch not in ("335", "014", "015", "016", "976")
+      and bk_code = 0
+      and repo_step = 0
+      and cycle_past_due_cnt = 0
+      and day_past_due_cnt <= 7
+    group by yyyymm;
+quit;
+
+/* Step 8: Filter by loan_out_amt > 0 */
+proc sql;
+    title "Step 8: Records where loan_out_amt > 0 by yyyymm";
+    select yyyymm, count(*) as Step_8_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+      and acctno = loan_acct_nbr
+      and branch not in ("335", "014", "015", "016", "976")
+      and bk_code = 0
+      and repo_step = 0
+      and cycle_past_due_cnt = 0
+      and day_past_due_cnt <= 7
+      and loan_out_amt > 0
+    group by yyyymm;
+quit;
+
+/* Step 9: Filter by loan_status = 1 */
+proc sql;
+    title "Step 9: Records where loan_status = 1 (open and valid loans) by yyyymm";
+    select yyyymm, count(*) as Step_9_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+      and acctno = loan_acct_nbr
+      and branch not in ("335", "014", "015", "016", "976")
+      and bk_code = 0
+      and repo_step = 0
+      and cycle_past_due_cnt = 0
+      and day_past_due_cnt <= 7
+      and loan_out_amt > 0
+      and loan_status = 1
+    group by yyyymm;
+quit;
+
+/* Step 10: Filter by collection_score < 9000 */
+proc sql;
+    title "Step 10: Records where collection_score < 9000 by yyyymm (final filtered population)";
+    select yyyymm, count(*) as Final_Record_Count
+    from B1_perf_&perfqtr
+    where CHAMPION_FLAG = 0
+      and acctno = loan_acct_nbr
+      and branch not in ("335", "014", "015", "016", "976")
+      and bk_code = 0
+      and repo_step = 0
+      and cycle_past_due_cnt = 0
+      and day_past_due_cnt <= 7
+      and loan_out_amt > 0
+      and loan_status = 1
+      and collection_score < 9000
+    group by yyyymm;
+quit;
