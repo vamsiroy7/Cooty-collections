@@ -1,0 +1,48 @@
+import pandas as pd
+
+# Ensure yyyymm is in string format for proper sorting
+df['yyyymm'] = df['yyyymm'].astype(str)
+df = df.sort_values(by=['yyyymm'])
+
+# Get unique months
+months = sorted(df['yyyymm'].unique())
+
+# Compute month-wise get_measures
+month_results = []
+for month in months:
+    month_data = df[df['yyyymm'] == month]
+    measures = get_measures(month_data, 'scaledScore', 'perf_ind')  # Apply function
+    
+    # Ensure proper storage of values
+    month_results.append({'yyyymm': month, 'KS': measures['KS'], 'AUC': measures['AUC']})
+
+# Convert to DataFrame
+month_df = pd.DataFrame(month_results)
+print("Month-wise get_measures results:")
+print(month_df)
+
+# ---- Quarter-wise Processing ----
+
+# Extract year and month from yyyymm
+df['year'] = df['yyyymm'].str[:4]
+df['month'] = df['yyyymm'].str[4:].astype(int)
+
+# Create quarter column (Q1, Q2, Q3, Q4)
+df['quarter'] = df['year'] + 'Q' + ((df['month'] - 1) // 3 + 1).astype(str)
+
+# Get unique quarters
+quarters = sorted(df['quarter'].unique())
+
+# Compute quarter-wise get_measures
+quarter_results = []
+for quarter in quarters:
+    quarter_data = df[df['quarter'] == quarter]
+    measures = get_measures(quarter_data, 'scaledScore', 'perf_ind')  # Apply function
+
+    # Ensure proper storage of values
+    quarter_results.append({'quarter': quarter, 'KS': measures['KS'], 'AUC': measures['AUC']})
+
+# Convert to DataFrame
+quarter_df = pd.DataFrame(quarter_results)
+print("Quarter-wise get_measures results:")
+print(quarter_df)
