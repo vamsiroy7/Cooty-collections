@@ -1,0 +1,30 @@
+PROC SORT DATA=performance; 
+    BY loan_id date_id; 
+RUN;
+
+PROC SORT DATA=second_dataset; 
+    BY loan_id date_id; 
+RUN;
+
+DATA final_result;
+    MERGE performance (IN=a) second_dataset (IN=b);
+    BY loan_id date_id;
+
+    /* Retain previous known values */
+    RETAIN prev_value prev_date;
+
+    /* If an exact match is found, store its value */
+    IF b THEN DO;
+        prev_value = value;
+        prev_date = date_id;
+    END;
+
+    /* If no exact match, use the previous stored value */
+    IF a AND NOT b THEN DO;
+        value = prev_value;
+        date_id = prev_date;
+    END;
+
+    /* Keep all records from performance */
+    IF a;
+RUN;
