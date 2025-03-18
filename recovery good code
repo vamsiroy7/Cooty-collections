@@ -1,0 +1,20 @@
+/* Step 1: Sort Dataset 2 by loan_id and date_id */
+proc sort data=loan_daily_data;
+    by loan_id date_id;
+run;
+
+/* Step 2: Use SQL to join and fetch the nearest previous date's data */
+proc sql;
+    create table merged_data as
+    select a.loan_sid,
+           a.date_id,
+           b.balance,
+           b.payment_count
+    from loan_monthly_data a
+    left join loan_daily_data b
+    on a.loan_sid = b.loan_id
+    and b.date_id = (select max(date_id) 
+                     from loan_daily_data 
+                     where loan_daily_data.loan_id = a.loan_sid 
+                     and loan_daily_data.date_id <= a.date_id);
+quit;
