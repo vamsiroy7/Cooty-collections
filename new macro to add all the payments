@@ -1,0 +1,43 @@
+%macro merge_data(start_date, end_date);
+
+    /* Convert input start_date and end_date into SAS date format */
+    %let start_date_num = %sysfunc(inputn(&start_date, yymmdd8.));
+    %let end_date_num = %sysfunc(inputn(&end_date, yymmdd8.));
+
+    /* Initialize the final dataset */
+    data bd_perf;
+        set _null_;
+    run;
+
+    /* Loop through all dates from start_date to end_date */
+    %let current_date = &start_date_num;
+
+    %do %while(&current_date <= &end_date_num);
+
+        /* Convert current date to yyyymmdd format */
+        %let current_date_num = %sysfunc(putn(&current_date, yymmddn8.));
+
+        /* Check if the dataset for the date exists */
+        %if %sysfunc(exist(bd.pl_initial_datapull_&current_date_num)) %then %do;
+            data temp;
+                set bd.pl_initial_datapull_&current_date_num;
+            run;
+
+            /* Append the current day's data to bd_perf */
+            proc append base=bd_perf data=temp force;
+            run;
+        %end;
+        %else %do;
+            /* Log missing datasets */
+            %put WARNING: Dataset bd.pl_initial_datapull_&current_date_num does not exist!;
+        %end;
+
+        /* Increment to the next date */
+        %let current_date = %sysfunc(intnx(day, &current_date, 1));
+
+    %end;
+
+%mend merge_data;
+
+/* Example execution */
+%merge_data(20240301, 20240415); /* Merging data from March 1, 2024 to April 15, 2024 */
